@@ -20,7 +20,7 @@ defmodule Calc do
   def solve_each([head|tail], matched, target) do
     matched = Enum.reduce(sums(tail, head, []), matched,
       fn(i, a) -> if i == target, do: a + 1, else: a end)
-    # IO.inspect head
+    IO.inspect head
     # IO.inspect tail
     # IO.inspect sums(tail, head, [])
     # IO.inspect matched
