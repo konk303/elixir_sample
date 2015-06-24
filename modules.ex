@@ -3,30 +3,38 @@ defmodule ReadInput do
     IO.gets("") |> String.strip |> String.to_integer
   end
 
-  def read_value(values, n) when n <= 0, do: values
-  def read_value(values, n) do
-    read_value([gets_to_i | values], n - 1)
+  def read_values(count) do
+    Enum.map(1..count, fn(_) -> gets_to_i end)
   end
 end
 
 defmodule Solve do
-  def solve(values, target) do
-    IO.puts solve_each(values, target, 0)
+  def solve(values, needs) do
+    sorted = Enum.sort(values)
+    IO.puts Enum.reduce(do_solve(sorted, needs, self, []), 0, fn(pid, a) ->
+      # IO.inspect pid
+      receive do
+        { ^pid, result } ->
+          a + result
+      end
+    end)
   end
 
-  def solve_each([], _, matched), do: matched
-  def solve_each([head|tail], target, matched) do
-    # IO.inspect head
-    # IO.inspect tail
-    # IO.inspect matched_count(tail, target - head, 0)
-    # IO.inspect matched
-    # IO.inspect target
-    solve_each(tail, target, matched + matched_count(tail, target - head, 0))
+  defp do_solve([_, _], _, _, pids), do: pids
+  defp do_solve([first|tail], needs, parent, pids) do
+    # IO.inspect first
+    do_solve tail, needs, parent, [
+      (spawn_link fn -> send(parent, { self, test_second(tail, needs - first, 0) }) end)
+      | pids]
   end
 
-  def matched_count([], _, result), do: result
-  def matched_count([head|tail], needs, result) do
-    matched_count tail, needs,
-    result + Enum.count(tail, &(head + &1 == needs))
+  defp test_second([], _, counts), do: counts
+  defp test_second([second|tail], needs, counts) do
+    test_second(tail, needs, counts + test_third(tail, needs - second))
   end
+
+  defp test_third([], _), do: 0
+  defp test_third([third|_], need) when (third > need), do: 0
+  defp test_third([third|_], need) when (third == need), do: 1
+  defp test_third([_|tail], need), do: test_third(tail, need)
 end
