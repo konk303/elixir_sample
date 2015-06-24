@@ -9,25 +9,24 @@ defmodule ReadInput do
   end
 end
 
-defmodule Calc do
+defmodule Solve do
   def solve(values, target) do
-    IO.inspect solve_each(values, 0, target)
+    IO.puts solve_each(values, target, 0)
   end
 
-  def solve_each([], matched, _), do: matched
-  def solve_each([head|tail], matched, target) do
-    matched = Enum.reduce(sums(tail, head, []), matched,
-      fn(i, a) -> if i == target, do: a + 1, else: a end)
+  def solve_each([], _, matched), do: matched
+  def solve_each([head|tail], target, matched) do
     # IO.inspect head
     # IO.inspect tail
-    # IO.inspect sums(tail, head, [])
+    # IO.inspect matched_count(tail, target - head, 0)
     # IO.inspect matched
     # IO.inspect target
-    solve_each(tail, matched, target)
+    solve_each(tail, target, matched + matched_count(tail, target - head, 0))
   end
 
-  def sums([], _, result), do: result
-  def sums([head|tail], v1, result) do
-    sums tail, v1, Enum.map(tail, &(v1 + head + &1)) ++ result
+  def matched_count([], _, result), do: result
+  def matched_count([head|tail], needs, result) do
+    matched_count tail, needs,
+    result + Enum.count(tail, &(head + &1 == needs))
   end
 end
