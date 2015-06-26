@@ -17,4 +17,5 @@ target = ReadInput.gets_to_i
 count = ReadInput.gets_to_i
 values = ReadInput.read_values(count)
 # IO.inspect values
+# SolveWithTuple.solve(values, target)
 Solve.solve(values, target)
