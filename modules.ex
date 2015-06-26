@@ -11,12 +11,12 @@ end
 defmodule Solve do
   def solve(values, needs) do
     sorted = Enum.sort(values)
-
     proc_count = do_solve(sorted, needs, 0)
+
     IO.puts Enum.reduce(1..proc_count, 0, fn(_, a) ->
       # IO.inspect pid
       receive do
-        { _, result } -> a + result
+        { result } -> a + result
       end
     end)
   end
@@ -25,17 +25,25 @@ defmodule Solve do
   defp do_solve([first|tail], needs, count) do
     # IO.inspect first
     me = self()
-    spawn_link fn -> send(me, { self, test_second(tail, needs - first, 0) }) end
+    spawn_link fn -> send(me, { test_second(tail, needs - first, 0) }) end
     do_solve tail, needs, count + 1
   end
 
-  defp test_second([], _, matcheds), do: matcheds
+  defp test_second([_], _, matcheds), do: matcheds
   defp test_second([second|tail], needs, matcheds) do
-    test_second(tail, needs, matcheds + test_third(tail, needs - second))
+    third = needs - second
+    case third do
+      x when x <= second -> matcheds
+      x -> test_second(tail, needs, matcheds + test_third(tail, x))
+    end
   end
 
   defp test_third([], _), do: 0
-  defp test_third([third|_], need) when (third > need), do: 0
-  defp test_third([third|_], need) when (third == need), do: 1
+  defp test_third([third|_], need) when (third >= need) do
+    case third do
+      x when x > need -> 0
+      x when x == need -> 1
+    end
+  end
   defp test_third([_|tail], need), do: test_third(tail, need)
 end
