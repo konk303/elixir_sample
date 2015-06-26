@@ -11,26 +11,27 @@ end
 defmodule Solve do
   def solve(values, needs) do
     sorted = Enum.sort(values)
-    IO.puts Enum.reduce(do_solve(sorted, needs, self, []), 0, fn(pid, a) ->
+
+    proc_count = do_solve(sorted, needs, 0)
+    IO.puts Enum.reduce(1..proc_count, 0, fn(_, a) ->
       # IO.inspect pid
       receive do
-        { ^pid, result } ->
-          a + result
+        { _, result } -> a + result
       end
     end)
   end
 
-  defp do_solve([_, _], _, _, pids), do: pids
-  defp do_solve([first|tail], needs, parent, pids) do
+  defp do_solve([_, _], _, count), do: count
+  defp do_solve([first|tail], needs, count) do
     # IO.inspect first
-    do_solve tail, needs, parent, [
-      (spawn_link fn -> send(parent, { self, test_second(tail, needs - first, 0) }) end)
-      | pids]
+    me = self()
+    spawn_link fn -> send(me, { self, test_second(tail, needs - first, 0) }) end
+    do_solve tail, needs, count + 1
   end
 
-  defp test_second([], _, counts), do: counts
-  defp test_second([second|tail], needs, counts) do
-    test_second(tail, needs, counts + test_third(tail, needs - second))
+  defp test_second([], _, matcheds), do: matcheds
+  defp test_second([second|tail], needs, matcheds) do
+    test_second(tail, needs, matcheds + test_third(tail, needs - second))
   end
 
   defp test_third([], _), do: 0
