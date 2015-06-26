@@ -12,6 +12,8 @@
 # elixir solve.exs < datas/data4.txt  292.71s user 0.58s system 768% cpu 38.158 total
 # 1571200
 # elixir solve.exs < datas/data4.txt  293.66s user 0.52s system 776% cpu 37.896 total
+# 1571200
+# ./solve.exs < datas/data4.txt  78.59s user 1.03s system 325% cpu 24.440 total
 
 target = ReadInput.gets_to_i
 count = ReadInput.gets_to_i

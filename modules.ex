@@ -11,38 +11,34 @@ end
 defmodule Solve do
   def solve(values, needs) do
     sorted = Enum.sort(values)
+    map = Enum.reduce(sorted, %{}, &(Map.put &2, &1, nil))
+    # IO.inspect(map)
 
-    IO.puts Enum.reduce(do_solve(sorted, needs, []), 0, fn(pid, a) ->
-      # IO.inspect pid
+    IO.puts do_solve(sorted, map, needs)
+  end
+
+  defp do_solve([_, _], map, _) do
+    Enum.reduce(1..(Map.size(map) - 2), 0, fn(_, a) ->
+      # IO.inspect a
       receive do
-        { ^pid, result } -> a + result
+        { result } -> a + result
       end
     end)
   end
-
-  defp do_solve([_, _], _, pids), do: pids
-  defp do_solve([first|tail], needs, pids) do
+  defp do_solve([first|tail], map, needs) do
     # IO.inspect first
     me = self()
-    pid = spawn_link fn -> send(me, { self, test_second(tail, needs - first, 0) }) end
-    do_solve tail, needs, [pid | pids]
+    spawn_link fn -> send(me, { test_second(tail, map, needs - first) }) end
+    do_solve tail, map, needs
   end
 
-  defp test_second([_], _, matcheds), do: matcheds
-  defp test_second([second|tail], needs, matcheds) do
-    third = needs - second
-    case third do
-      x when x <= second -> matcheds
-      x -> test_second(tail, needs, matcheds + test_third(tail, x))
-    end
+  defp test_second(seconds, map, needs) do
+    Enum.count(seconds, fn(second) ->
+      third = needs - second
+      case third do
+        x when x <= second -> false
+        x -> Map.has_key?(map, x)
+      end
+    end)
   end
-
-  defp test_third([], _), do: 0
-  defp test_third([third|_], need) when (third >= need) do
-    case third do
-      x when x > need -> 0
-      x when x == need -> 1
-    end
-  end
-  defp test_third([_|tail], need), do: test_third(tail, need)
 end
