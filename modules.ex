@@ -4,29 +4,28 @@ defmodule ReadInput do
   end
 
   def read_values(count) do
-    Enum.map(1..count, fn(_) -> gets_to_i end)
+    Stream.map(1..count, fn(_) -> gets_to_i end)
   end
 end
 
 defmodule Solve do
   def solve(values, needs) do
     sorted = Enum.sort(values)
-    proc_count = do_solve(sorted, needs, 0)
 
-    IO.puts Enum.reduce(1..proc_count, 0, fn(_, a) ->
+    IO.puts Enum.reduce(do_solve(sorted, needs, []), 0, fn(pid, a) ->
       # IO.inspect pid
       receive do
-        { result } -> a + result
+        { ^pid, result } -> a + result
       end
     end)
   end
 
-  defp do_solve([_, _], _, count), do: count
-  defp do_solve([first|tail], needs, count) do
+  defp do_solve([_, _], _, pids), do: pids
+  defp do_solve([first|tail], needs, pids) do
     # IO.inspect first
     me = self()
-    spawn_link fn -> send(me, { test_second(tail, needs - first, 0) }) end
-    do_solve tail, needs, count + 1
+    pid = spawn_link fn -> send(me, { self, test_second(tail, needs - first, 0) }) end
+    do_solve tail, needs, [pid | pids]
   end
 
   defp test_second([_], _, matcheds), do: matcheds
